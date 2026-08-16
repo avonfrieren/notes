@@ -24,7 +24,7 @@ it. Validating an empty field clears the note.
 | `Home` / `End` | start / end of line (`Ctrl` for the whole note) |
 | `Backspace` / `Delete` | delete (`Ctrl+Backspace` deletes a word) |
 | `Ctrl+V` | paste, line breaks included |
-| `Tab` / `Shift+Tab` | move the note to the next / previous anchor |
+| `Tab` / `Ctrl+Tab` | move the note to the next / previous anchor |
 
 Moving up and down keeps your horizontal position on screen rather than your character
 number, since the game font is not monospaced.
@@ -37,7 +37,8 @@ Every anchor holds its own note, and there are nine of them — the three corner
 of each edge, plus the center of the screen. Positions are fixed: clearing a note never makes
 another one slide somewhere else.
 
-`Tab` while writing carries the note to the next anchor and drops it there when you validate,
+`Tab` (and `Ctrl+Tab` to go backwards) while writing carries the note to the next anchor and
+drops it there when you validate,
 which is also how you move a note you already wrote. The field opens on the anchor you last
 wrote to. Validating on an anchor that already holds a note replaces it.
 
@@ -79,6 +80,11 @@ dotnet build
 The mod is copied to `<Celeste>/Mods/notes/` on build, as an uncompressed folder.
 
 ## Changelog
+
+### v0.4.2
+
+* Cycling back through the anchors moved from `Shift+Tab` to **`Ctrl+Tab`**, since `Shift+Tab`
+  belongs to the Steam overlay
 
 ### v0.4.1
 

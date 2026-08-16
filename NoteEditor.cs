@@ -145,8 +145,9 @@ public class NoteEditor {
             Insert((TextInput.GetClipboardText() ?? "").Replace("\r\n", "\n").Replace('\r', '\n'));
 
         // Tab déplace le champ d'un ancrage à l'autre, la note en cours d'écriture suit.
+        // Le retour en arrière est sur Ctrl et pas sur Shift : Shift+Tab appartient à Steam.
         if (MInput.Keyboard.Pressed(Keys.Tab))
-            CycleAnchor(MInput.Keyboard.Check(Keys.LeftShift) || MInput.Keyboard.Check(Keys.RightShift) ? -1 : 1);
+            CycleAnchor(control ? -1 : 1);
 
         if (left.Check(dt) && CursorIndex > 0)
             MoveCursor(control ? PreviousWord() : CursorIndex - 1);
