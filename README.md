@@ -24,11 +24,21 @@ it. Validating an empty field clears the note.
 | `Home` / `End` | start / end of line (`Ctrl` for the whole note) |
 | `Backspace` / `Delete` | delete (`Ctrl+Backspace` deletes a word) |
 | `Ctrl+V` | paste, line breaks included |
+| `Tab` / `Shift+Tab` | move the note to the next / previous anchor |
 
 Moving up and down keeps your horizontal position on screen rather than your character
 number, since the game font is not monospaced.
 
 Notes are **volatile**: they are never saved, they disappear when you close the game.
+
+### Several notes at once
+
+Every anchor holds its own note, so you can have one in each corner. Positions are fixed:
+clearing a note never makes another one slide somewhere else.
+
+`Tab` while writing carries the note to the next anchor and drops it there when you validate,
+which is also how you move a note you already wrote. The field opens on the anchor you last
+wrote to. Validating on an anchor that already holds a note replaces it.
 
 ### Console command
 
@@ -38,8 +48,9 @@ The debug console (`.` by default) also works, which is handy for scripting:
 note remember to grab the berry
 ```
 
-Called without arguments, it clears the note. A literal `\n` becomes a line break, since the
-console cannot take a real one:
+It writes to the current anchor, the one the field would open on. Called without arguments, it
+clears that note. A literal `\n` becomes a line break, since the console cannot take a real
+one:
 
 ```
 note first line\nsecond line
@@ -52,7 +63,7 @@ is capped at 16 words. The in-game field has none of these limitations.
 ## Options
 
 * **Enabled** — show or hide the note without clearing it
-* **Anchor** — which corner or edge of the screen the note sticks to
+* **Anchor** — where the field opens; `Tab` moves it while writing
 * **Scale** — text size, in tenths
 * **Write a Note** — the key that opens the field, `T` by default
 
@@ -67,6 +78,13 @@ dotnet build
 The mod is copied to `<Celeste>/Mods/notes/` on build, as an uncompressed folder.
 
 ## Changelog
+
+### v0.4.0
+
+* **Several notes at once**: one per anchor, each at a fixed position, so clearing one never
+  moves another
+* `Tab` / `Shift+Tab` while writing carries the note from one anchor to the next
+* The field opens on the anchor you last wrote to
 
 ### v0.3.0
 

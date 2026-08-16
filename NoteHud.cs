@@ -22,16 +22,24 @@ public class NoteHud : Entity {
             return;
 
         float scale = settings.Scale * 0.1f;
-        (Vector2 pos, Vector2 justify) = Layout(settings.Anchor);
-
         NoteEditor editor = NotesModule.Instance.Editor;
-        if (editor.Active) {
-            RenderEditor(editor, pos, justify, scale);
-            return;
+
+        foreach (NotesSettings.Anchors anchor in NotesSettings.AnchorValues) {
+            // Pendant l'écriture, la note d'origine est dans le champ, et celle que le champ
+            // recouvre serait dessinée par-dessus : les deux se taisent.
+            if (editor.Active && (anchor == editor.Anchor || anchor == editor.OriginAnchor))
+                continue;
+            string text = NotesModule.GetText(anchor);
+            if (text.Length == 0)
+                continue;
+            (Vector2 notePos, Vector2 noteJustify) = Layout(anchor);
+            RenderBlock(text, notePos, noteJustify, scale);
         }
 
-        if (!string.IsNullOrEmpty(NotesModule.Text))
-            RenderBlock(NotesModule.Text, pos, justify, scale);
+        if (editor.Active) {
+            (Vector2 pos, Vector2 justify) = Layout(editor.Anchor);
+            RenderEditor(editor, pos, justify, scale);
+        }
     }
 
     // La note en cours d'écriture s'affiche à son emplacement final, avec le même découpage

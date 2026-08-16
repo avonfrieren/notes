@@ -1,5 +1,5 @@
 - Name: notes
-  Version: 0.3.0
+  Version: 0.4.0
   DLL: Notes.dll
   Dependencies:
     - Name: EverestCore

@@ -22,6 +22,11 @@ public class NoteEditor {
     public int CursorIndex { get; private set; }
     public float BlinkTimer { get; private set; }
 
+    // Ancrage visé par la note en cours d'écriture, et celui d'où elle vient : Tab déplace
+    // la note, donc valider ailleurs qu'à l'origine vide l'emplacement de départ.
+    public NotesSettings.Anchors Anchor { get; private set; }
+    public NotesSettings.Anchors OriginAnchor { get; private set; }
+
     private bool sceneWasPaused;
     private int consumeInput;
     private bool ignoreCharsThisFrame;
@@ -82,7 +87,9 @@ public class NoteEditor {
             return;
 
         // On repart de la note en cours : ouvrir sert autant à éditer qu'à écrire.
-        Buffer = NotesModule.Text;
+        Anchor = NotesModule.Settings.Anchor;
+        OriginAnchor = Anchor;
+        Buffer = NotesModule.GetText(Anchor);
         CursorIndex = Buffer.Length;
         BlinkTimer = 0f;
         desiredColumn = NoColumn;
@@ -104,8 +111,14 @@ public class NoteEditor {
         Active = false;
         consumeInput = ConsumeFrames;
 
-        if (validate)
-            NotesModule.Text = Buffer;
+        if (validate) {
+            // La note a voyagé : son emplacement de départ se vide.
+            if (Anchor != OriginAnchor)
+                NotesModule.SetText(OriginAnchor, "");
+            NotesModule.SetText(Anchor, Buffer);
+            // La prochaine ouverture repart d'où on vient de laisser la note.
+            NotesModule.Settings.Anchor = Anchor;
+        }
         Buffer = "";
         CursorIndex = 0;
     }
@@ -130,6 +143,10 @@ public class NoteEditor {
 
         if (control && MInput.Keyboard.Pressed(Keys.V))
             Insert((TextInput.GetClipboardText() ?? "").Replace("\r\n", "\n").Replace('\r', '\n'));
+
+        // Tab déplace le champ d'un ancrage à l'autre, la note en cours d'écriture suit.
+        if (MInput.Keyboard.Pressed(Keys.Tab))
+            CycleAnchor(MInput.Keyboard.Check(Keys.LeftShift) || MInput.Keyboard.Check(Keys.RightShift) ? -1 : 1);
 
         if (left.Check(dt) && CursorIndex > 0)
             MoveCursor(control ? PreviousWord() : CursorIndex - 1);
@@ -221,6 +238,13 @@ public class NoteEditor {
         CursorIndex = best;
         BlinkTimer = 0f;
         desiredColumn = column;
+    }
+
+    private void CycleAnchor(int direction) {
+        NotesSettings.Anchors[] values = NotesSettings.AnchorValues;
+        int index = Array.IndexOf(values, Anchor) + direction;
+        Anchor = values[(index + values.Length) % values.Length];
+        BlinkTimer = 0f;
     }
 
     private int LineStart(int index) {

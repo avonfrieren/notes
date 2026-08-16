@@ -2,6 +2,7 @@
 MODOPTIONS_NOTES_TITLE=                 notes
 MODOPTIONS_NOTES_ENABLED=               Enabled
 MODOPTIONS_NOTES_ANCHOR=                Anchor
+MODOPTIONS_NOTES_ANCHOR_SUB=            Where the field opens. Tab moves it while writing
 MODOPTIONS_NOTES_ANCHOR_TOPLEFT=        Top Left
 MODOPTIONS_NOTES_ANCHOR_TOPCENTER=      Top Center
 MODOPTIONS_NOTES_ANCHOR_TOPRIGHT=       Top Right

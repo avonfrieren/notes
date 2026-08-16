@@ -22,7 +22,9 @@ public static class NoteCommands {
         string text = string.Join(" ", words.Where(word => !string.IsNullOrEmpty(word)))
             .Replace("\\n", "\n");
 
-        NotesModule.Text = text;
-        Engine.Commands.Log(text.Length == 0 ? "note cleared" : $"note: {text}");
+        // La commande écrit sur l'ancrage courant, celui où l'éditeur s'ouvrirait.
+        NotesSettings.Anchors anchor = NotesModule.Settings.Anchor;
+        NotesModule.SetText(anchor, text);
+        Engine.Commands.Log(text.Length == 0 ? $"note cleared ({anchor})" : $"note ({anchor}): {text}");
     }
 }

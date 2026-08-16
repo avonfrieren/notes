@@ -8,14 +8,25 @@ public class NotesModule : EverestModule {
     public override Type SettingsType => typeof(NotesSettings);
     public static NotesSettings Settings => (NotesSettings)Instance._Settings;
 
-    // Volatile : jamais écrit dans les settings. Le texte survit aux changements de room
-    // et aux morts, il disparaît à la fermeture du jeu.
-    public static string Text { get; set; } = "";
+    // Une note par ancrage, à emplacement fixe : effacer une note n'en fait glisser aucune
+    // autre. Volatile, comme tout le reste : jamais écrit dans les settings, le contenu
+    // disparaît à la fermeture du jeu.
+    private static readonly string[] texts = new string[NotesSettings.AnchorValues.Length];
 
     public NoteEditor Editor { get; } = new();
 
     public NotesModule() {
         Instance = this;
+    }
+
+    public static string GetText(NotesSettings.Anchors anchor) => texts[(int)anchor] ?? "";
+
+    public static void SetText(NotesSettings.Anchors anchor, string text) {
+        texts[(int)anchor] = text ?? "";
+    }
+
+    public static void ClearAll() {
+        Array.Clear(texts);
     }
 
     public override void Load() {
@@ -28,7 +39,7 @@ public class NotesModule : EverestModule {
         Everest.Events.Level.OnLoadLevel -= OnLoadLevel;
         On.Celeste.Level.Update -= OnLevelUpdate;
         Editor.Close(false);
-        Text = "";
+        ClearAll();
     }
 
     private void OnLoadLevel(Level level, Player.IntroTypes playerIntro, bool isFromLoader) {

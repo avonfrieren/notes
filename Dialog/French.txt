@@ -2,6 +2,7 @@
 MODOPTIONS_NOTES_TITLE=                 notes
 MODOPTIONS_NOTES_ENABLED=               Activé
 MODOPTIONS_NOTES_ANCHOR=                Ancrage
+MODOPTIONS_NOTES_ANCHOR_SUB=            Où le champ s'ouvre. Tab le déplace pendant l'écriture
 MODOPTIONS_NOTES_ANCHOR_TOPLEFT=        En haut à gauche
 MODOPTIONS_NOTES_ANCHOR_TOPCENTER=      En haut au centre
 MODOPTIONS_NOTES_ANCHOR_TOPRIGHT=       En haut à droite
