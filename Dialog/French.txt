@@ -1,0 +1,13 @@
+# notes — options du mod
+MODOPTIONS_NOTES_TITLE=                 notes
+MODOPTIONS_NOTES_ENABLED=               Activé
+MODOPTIONS_NOTES_ANCHOR=                Ancrage
+MODOPTIONS_NOTES_ANCHOR_TOPLEFT=        En haut à gauche
+MODOPTIONS_NOTES_ANCHOR_TOPCENTER=      En haut au centre
+MODOPTIONS_NOTES_ANCHOR_TOPRIGHT=       En haut à droite
+MODOPTIONS_NOTES_ANCHOR_CENTER=         Au centre
+MODOPTIONS_NOTES_ANCHOR_BOTTOMLEFT=     En bas à gauche
+MODOPTIONS_NOTES_ANCHOR_BOTTOMCENTER=   En bas au centre
+MODOPTIONS_NOTES_ANCHOR_BOTTOMRIGHT=    En bas à droite
+MODOPTIONS_NOTES_SCALE=                 Taille
+MODOPTIONS_NOTES_SCALE_SUB=             Taille du texte en dixièmes. Par défaut : 8
