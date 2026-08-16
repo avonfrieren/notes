@@ -9,9 +9,13 @@ namespace Celeste.Mod.Notes;
 // le jeu est mis en pause pendant la frappe, et les VirtualButton du jeu sont consommés
 // pendant la saisie et quelques frames après pour que la touche de validation ne déclenche
 // pas un dash ou le menu pause.
+//
+// Le buffer contient de vrais retours à la ligne : Entrée en insère un, Ctrl+Entrée valide.
 public class NoteEditor {
     // Frames de consommation d'inputs après la fermeture.
     private const int ConsumeFrames = 2;
+    // Colonne cible non calculée : les Up/Down consécutifs la conservent, tout le reste la jette.
+    private const float NoColumn = -1f;
 
     public bool Active { get; private set; }
     public string Buffer { get; private set; } = "";
@@ -21,9 +25,12 @@ public class NoteEditor {
     private bool sceneWasPaused;
     private int consumeInput;
     private bool ignoreCharsThisFrame;
+    private float desiredColumn = NoColumn;
 
     private readonly KeyRepeat left = new(Keys.Left);
     private readonly KeyRepeat right = new(Keys.Right);
+    private readonly KeyRepeat up = new(Keys.Up);
+    private readonly KeyRepeat down = new(Keys.Down);
     private readonly KeyRepeat delete = new(Keys.Delete);
 
     private static VirtualButton[] gameButtons;
@@ -33,6 +40,25 @@ public class NoteEditor {
         Input.Jump, Input.Dash, Input.Grab, Input.Talk, Input.Pause, Input.ESC,
         Input.MenuConfirm, Input.MenuCancel, Input.MenuJournal, Input.QuickRestart,
     };
+
+    // Ligne du curseur, et sa distance au début de cette ligne en unités de police
+    // (non mises à l'échelle) : le HUD s'en sert pour placer le curseur.
+    public int CursorLine {
+        get {
+            int line = 0;
+            for (int i = 0; i < CursorIndex; i++)
+                if (Buffer[i] == '\n')
+                    line++;
+            return line;
+        }
+    }
+
+    public float CursorColumn {
+        get {
+            int start = LineStart(CursorIndex);
+            return ActiveFont.Measure(Buffer.Substring(start, CursorIndex - start)).X;
+        }
+    }
 
     public void Update() {
         if (Active) {
@@ -56,9 +82,10 @@ public class NoteEditor {
             return;
 
         // On repart de la note en cours : ouvrir sert autant à éditer qu'à écrire.
-        Buffer = NotesModule.Text.Replace("\n", "\\n");
+        Buffer = NotesModule.Text;
         CursorIndex = Buffer.Length;
         BlinkTimer = 0f;
+        desiredColumn = NoColumn;
         Active = true;
         // La touche d'ouverture ne doit pas s'écrire dans le champ.
         ignoreCharsThisFrame = true;
@@ -78,7 +105,7 @@ public class NoteEditor {
         consumeInput = ConsumeFrames;
 
         if (validate)
-            NotesModule.Text = Buffer.Replace("\\n", "\n");
+            NotesModule.Text = Buffer;
         Buffer = "";
         CursorIndex = 0;
     }
@@ -87,31 +114,35 @@ public class NoteEditor {
         float dt = Engine.RawDeltaTime;
         BlinkTimer += dt;
 
+        bool control = MInput.Keyboard.Check(Keys.LeftControl) || MInput.Keyboard.Check(Keys.RightControl);
+
         if (MInput.Keyboard.Pressed(Keys.Enter)) {
-            Close(true);
-            return;
+            if (control) {
+                Close(true);
+                return;
+            }
+            Insert("\n");
         }
         if (MInput.Keyboard.Pressed(Keys.Escape)) {
             Close(false);
             return;
         }
 
-        bool control = MInput.Keyboard.Check(Keys.LeftControl) || MInput.Keyboard.Check(Keys.RightControl);
-
-        if (control && MInput.Keyboard.Pressed(Keys.V)) {
-            string pasted = TextInput.GetClipboardText() ?? "";
-            // Un collé multi-ligne devient des \n littéraux : le champ reste sur une ligne.
-            Insert(pasted.Replace("\r\n", "\\n").Replace("\n", "\\n").Replace("\r", "\\n"));
-        }
+        if (control && MInput.Keyboard.Pressed(Keys.V))
+            Insert((TextInput.GetClipboardText() ?? "").Replace("\r\n", "\n").Replace('\r', '\n'));
 
         if (left.Check(dt) && CursorIndex > 0)
             MoveCursor(control ? PreviousWord() : CursorIndex - 1);
         else if (right.Check(dt) && CursorIndex < Buffer.Length)
             MoveCursor(control ? NextWord() : CursorIndex + 1);
+        else if (up.Check(dt))
+            MoveVertically(-1);
+        else if (down.Check(dt))
+            MoveVertically(1);
         else if (MInput.Keyboard.Pressed(Keys.Home))
-            MoveCursor(0);
+            MoveCursor(control ? 0 : LineStart(CursorIndex));
         else if (MInput.Keyboard.Pressed(Keys.End))
-            MoveCursor(Buffer.Length);
+            MoveCursor(control ? Buffer.Length : LineEnd(CursorIndex));
 
         if (delete.Check(dt) && CursorIndex < Buffer.Length) {
             Buffer = Buffer.Remove(CursorIndex, 1);
@@ -126,7 +157,7 @@ public class NoteEditor {
         if (c == (char)8) {
             if (CursorIndex == 0)
                 return;
-            // Ctrl+Backspace supprime le mot précédent.
+            // Ctrl+Backspace supprime le mot précédent, sans franchir le début de ligne.
             int target = MInput.Keyboard.Check(Keys.LeftControl) || MInput.Keyboard.Check(Keys.RightControl)
                 ? PreviousWord()
                 : CursorIndex - 1;
@@ -135,6 +166,7 @@ public class NoteEditor {
             return;
         }
 
+        // Entrée, Tab et compagnie sont traités au clavier dans UpdateActive().
         if (char.IsControl(c))
             return;
 
@@ -150,21 +182,72 @@ public class NoteEditor {
 
     private void MoveCursor(int index) {
         CursorIndex = Calc.Clamp(index, 0, Buffer.Length);
+        desiredColumn = NoColumn;
         // Curseur plein pendant qu'on édite, il ne se remet à clignoter qu'à l'arrêt.
         BlinkTimer = 0f;
     }
 
+    // Monte ou descend d'une ligne en visant la même position horizontale qu'avant, et pas
+    // le même numéro de caractère : la police est à chasse variable.
+    private void MoveVertically(int direction) {
+        int start = LineStart(CursorIndex);
+        float column = desiredColumn >= 0f ? desiredColumn : CursorColumn;
+
+        int targetStart, targetEnd;
+        if (direction < 0) {
+            if (start == 0)
+                return;
+            targetStart = LineStart(start - 1);
+            targetEnd = start - 1;
+        } else {
+            int end = LineEnd(CursorIndex);
+            if (end >= Buffer.Length)
+                return;
+            targetStart = end + 1;
+            targetEnd = LineEnd(targetStart);
+        }
+
+        // La largeur du préfixe croît avec l'index : dès qu'on s'éloigne, c'est fini.
+        int best = targetStart;
+        float bestDistance = float.MaxValue;
+        for (int i = targetStart; i <= targetEnd; i++) {
+            float distance = Math.Abs(ActiveFont.Measure(Buffer.Substring(targetStart, i - targetStart)).X - column);
+            if (distance >= bestDistance)
+                break;
+            bestDistance = distance;
+            best = i;
+        }
+
+        CursorIndex = best;
+        BlinkTimer = 0f;
+        desiredColumn = column;
+    }
+
+    private int LineStart(int index) {
+        if (index <= 0)
+            return 0;
+        int newline = Buffer.LastIndexOf('\n', index - 1);
+        return newline < 0 ? 0 : newline + 1;
+    }
+
+    private int LineEnd(int index) {
+        int newline = Buffer.IndexOf('\n', index);
+        return newline < 0 ? Buffer.Length : newline;
+    }
+
     private int PreviousWord() {
+        int start = LineStart(CursorIndex);
         int from = CursorIndex;
-        if (from > 0 && Buffer[from - 1] == ' ')
+        if (from > start && Buffer[from - 1] == ' ')
             from--;
-        int previous = Buffer.LastIndexOf(' ', Math.Max(from - 1, 0));
-        return previous < 0 ? 0 : previous + 1;
+        int previous = from <= start ? -1 : Buffer.LastIndexOf(' ', from - 1);
+        return previous < start ? start : previous + 1;
     }
 
     private int NextWord() {
+        int end = LineEnd(CursorIndex);
         int next = Buffer.IndexOf(' ', CursorIndex);
-        return next < 0 ? Buffer.Length : next + 1;
+        return next < 0 || next >= end ? end : next + 1;
     }
 
     private static void ConsumeGameButtons() {

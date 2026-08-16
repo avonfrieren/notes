@@ -30,35 +30,63 @@ public class NoteHud : Entity {
             return;
         }
 
-        string text = NotesModule.Text;
-        if (string.IsNullOrEmpty(text))
-            return;
-        // PixelFont gère les \n au dessin comme à la mesure : le multi-ligne est gratuit.
-        ActiveFont.DrawOutline(text, pos, justify, Vector2.One * scale,
-            Color.White, 2f, Color.Black);
+        if (!string.IsNullOrEmpty(NotesModule.Text))
+            RenderBlock(NotesModule.Text, pos, justify, scale);
     }
 
-    // La note en cours d'écriture s'affiche à son emplacement final : on voit exactement
-    // ce qu'on obtiendra en validant.
+    // La note en cours d'écriture s'affiche à son emplacement final, avec le même découpage
+    // en lignes : on voit exactement ce qu'on obtiendra en validant.
     private static void RenderEditor(NoteEditor editor, Vector2 pos, Vector2 justify, float scale) {
-        string text = editor.Buffer;
-        float height = ActiveFont.LineHeight * scale;
-        // Un champ vide garde une largeur minimale, sinon le fond et le curseur disparaissent.
-        float width = Math.Max(ActiveFont.Measure(text).X * scale, CursorWidth);
+        string[] lines = editor.Buffer.Split('\n');
+        float lineHeight = ActiveFont.LineHeight * scale;
+        float width = BlockWidth(lines, scale);
+        float height = lines.Length * lineHeight;
         Vector2 topLeft = pos - new Vector2(width * justify.X, height * justify.Y);
 
+        // Un champ vide garde une largeur minimale, sinon le fond se réduit à rien.
+        float boxWidth = Math.Max(width, CursorWidth);
         Draw.Rect(topLeft.X - Padding, topLeft.Y - Padding,
-            width + Padding * 2f, height + Padding * 2f, Color.Black * 0.6f);
+            boxWidth + Padding * 2f, height + Padding * 2f, Color.Black * 0.6f);
 
-        if (text.Length > 0)
-            ActiveFont.DrawOutline(text, topLeft, Vector2.Zero, Vector2.One * scale,
-                Color.White, 2f, Color.Black);
+        DrawLines(lines, topLeft, width, justify, scale);
 
         // Curseur dessiné en rectangle plutôt qu'en caractère : aucune dépendance à la police.
         if (editor.BlinkTimer % 1f < 0.5f) {
-            float offset = ActiveFont.Measure(text.Substring(0, editor.CursorIndex)).X * scale;
-            Draw.Rect(topLeft.X + offset, topLeft.Y, CursorWidth, height, Color.White);
+            int line = editor.CursorLine;
+            float lineWidth = ActiveFont.Measure(lines[line]).X * scale;
+            Draw.Rect(
+                topLeft.X + (width - lineWidth) * justify.X + editor.CursorColumn * scale,
+                topLeft.Y + line * lineHeight,
+                CursorWidth, lineHeight, Color.White);
         }
+    }
+
+    private static void RenderBlock(string text, Vector2 pos, Vector2 justify, float scale) {
+        string[] lines = text.Split('\n');
+        float width = BlockWidth(lines, scale);
+        float height = lines.Length * ActiveFont.LineHeight * scale;
+        DrawLines(lines, pos - new Vector2(width * justify.X, height * justify.Y), width, justify, scale);
+    }
+
+    // Les lignes sont dessinées une par une plutôt qu'en un seul appel : l'éditeur et la note
+    // partagent alors exactement la même géométrie, curseur compris.
+    private static void DrawLines(string[] lines, Vector2 topLeft, float width, Vector2 justify, float scale) {
+        float lineHeight = ActiveFont.LineHeight * scale;
+        for (int i = 0; i < lines.Length; i++) {
+            if (lines[i].Length == 0)
+                continue;
+            float lineWidth = ActiveFont.Measure(lines[i]).X * scale;
+            Vector2 at = topLeft + new Vector2((width - lineWidth) * justify.X, i * lineHeight);
+            ActiveFont.DrawOutline(lines[i], at, Vector2.Zero, Vector2.One * scale,
+                Color.White, 2f, Color.Black);
+        }
+    }
+
+    private static float BlockWidth(string[] lines, float scale) {
+        float width = 0f;
+        foreach (string line in lines)
+            width = Math.Max(width, ActiveFont.Measure(line).X * scale);
+        return width;
     }
 
     private static (Vector2 Pos, Vector2 Justify) Layout(NotesSettings.Anchors anchor) => anchor switch {

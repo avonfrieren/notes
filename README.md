@@ -9,21 +9,24 @@ you want on screen while you play.
 
 ## Usage
 
-Press **T** in a level (rebindable in the mod options). The game pauses, a field opens right
-where the note will live, and you type. `Enter` validates, `Escape` cancels.
+Press **T** in a level (rebindable in the mod options). The game pauses, a text area opens
+right where the note will live, and you type. `Ctrl+Enter` validates, `Escape` cancels.
 
 Reopening the field gives you the current note back, so you can edit it instead of retyping
 it. Validating an empty field clears the note.
 
-The field supports what you would expect from a text field: `←` `→` to move (`Ctrl` to move
-by word), `Home` / `End`, `Backspace` and `Delete` (`Ctrl+Backspace` deletes a word), and
-`Ctrl+V` to paste.
+| Key | |
+|---|---|
+| `Enter` | new line |
+| `Ctrl+Enter` | validate |
+| `Escape` | cancel |
+| `←` `→` `↑` `↓` | move the cursor (`Ctrl` moves by word) |
+| `Home` / `End` | start / end of line (`Ctrl` for the whole note) |
+| `Backspace` / `Delete` | delete (`Ctrl+Backspace` deletes a word) |
+| `Ctrl+V` | paste, line breaks included |
 
-A literal `\n` becomes a line break once validated:
-
-```
-first line\nsecond line
-```
+Moving up and down keeps your horizontal position on screen rather than your character
+number, since the game font is not monospaced.
 
 Notes are **volatile**: they are never saved, they disappear when you close the game.
 
@@ -35,10 +38,16 @@ The debug console (`.` by default) also works, which is handy for scripting:
 note remember to grab the berry
 ```
 
-Called without arguments, it clears the note. Beware that the console parser of the engine
-splits on spaces *and* commas and knows nothing about quotes, so commas you type are dropped,
-consecutive spaces collapse into one, and a note is capped at 16 words. The in-game field has
-none of these limitations.
+Called without arguments, it clears the note. A literal `\n` becomes a line break, since the
+console cannot take a real one:
+
+```
+note first line\nsecond line
+```
+
+Beware that the console parser of the engine splits on spaces *and* commas and knows nothing
+about quotes, so commas you type are dropped, consecutive spaces collapse into one, and a note
+is capped at 16 words. The in-game field has none of these limitations.
 
 ## Options
 
@@ -58,6 +67,15 @@ dotnet build
 The mod is copied to `<Celeste>/Mods/notes/` on build, as an uncompressed folder.
 
 ## Changelog
+
+### v0.3.0
+
+* The field is now a real **multi-line text area**: `Enter` breaks the line, `Ctrl+Enter`
+  validates
+* `↑` / `↓` move between lines and keep your horizontal position on screen, not your
+  character number
+* `Home` / `End` work per line, `Ctrl` extends them to the whole note
+* Pasting a multi-line clipboard keeps its line breaks
 
 ### v0.2.0
 
