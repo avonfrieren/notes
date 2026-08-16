@@ -11,3 +11,4 @@ MODOPTIONS_NOTES_ANCHOR_BOTTOMCENTER=   Bottom Center
 MODOPTIONS_NOTES_ANCHOR_BOTTOMRIGHT=    Bottom Right
 MODOPTIONS_NOTES_SCALE=                 Scale
 MODOPTIONS_NOTES_SCALE_SUB=             Text size in tenths. Default: 8
+MODOPTIONS_NOTES_OPENEDITOR=            Write a Note

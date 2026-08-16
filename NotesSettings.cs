@@ -1,3 +1,5 @@
+using Microsoft.Xna.Framework.Input;
+
 namespace Celeste.Mod.Notes;
 
 // La valeur par défaut de Scale est rappelée sous l'entrée via [SettingSubText] :
@@ -14,4 +16,8 @@ public class NotesSettings : EverestModuleSettings {
     [SettingRange(5, 20, true)]
     [SettingSubText("MODOPTIONS_NOTES_SCALE_SUB")]
     public int Scale { get; set; } = 8;
+
+    // T existe sur AZERTY comme sur QWERTY, contrairement aux touches OEM.
+    [DefaultButtonBinding(0, Keys.T)]
+    public ButtonBinding OpenEditor { get; set; }
 }
