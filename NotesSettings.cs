@@ -8,7 +8,11 @@ namespace Celeste.Mod.Notes;
 // Dialog/English.txt et Dialog/French.txt.
 public class NotesSettings : EverestModuleSettings {
     // L'ordre compte : c'est celui du cycle Tab dans l'éditeur, dans le sens de la lecture.
-    public enum Anchors { TopLeft, TopCenter, TopRight, Center, BottomLeft, BottomCenter, BottomRight }
+    public enum Anchors {
+        TopLeft, TopCenter, TopRight,
+        CenterLeft, Center, CenterRight,
+        BottomLeft, BottomCenter, BottomRight,
+    }
 
     public static readonly Anchors[] AnchorValues = (Anchors[])Enum.GetValues(typeof(Anchors));
 

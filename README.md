@@ -33,8 +33,9 @@ Notes are **volatile**: they are never saved, they disappear when you close the 
 
 ### Several notes at once
 
-Every anchor holds its own note, so you can have one in each corner. Positions are fixed:
-clearing a note never makes another one slide somewhere else.
+Every anchor holds its own note, and there are nine of them — the three corners and the middle
+of each edge, plus the center of the screen. Positions are fixed: clearing a note never makes
+another one slide somewhere else.
 
 `Tab` while writing carries the note to the next anchor and drops it there when you validate,
 which is also how you move a note you already wrote. The field opens on the anchor you last
@@ -78,6 +79,10 @@ dotnet build
 The mod is copied to `<Celeste>/Mods/notes/` on build, as an uncompressed folder.
 
 ## Changelog
+
+### v0.4.1
+
+* Two more anchors, **Center Left** and **Center Right**, which brings the grid to a full 3×3
 
 ### v0.4.0
 

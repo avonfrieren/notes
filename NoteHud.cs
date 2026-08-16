@@ -100,7 +100,9 @@ public class NoteHud : Entity {
     private static (Vector2 Pos, Vector2 Justify) Layout(NotesSettings.Anchors anchor) => anchor switch {
         NotesSettings.Anchors.TopCenter => (new Vector2(1920f / 2f, Margin), new Vector2(0.5f, 0f)),
         NotesSettings.Anchors.TopRight => (new Vector2(1920f - Margin, Margin), new Vector2(1f, 0f)),
+        NotesSettings.Anchors.CenterLeft => (new Vector2(Margin, 1080f / 2f), new Vector2(0f, 0.5f)),
         NotesSettings.Anchors.Center => (new Vector2(1920f / 2f, 1080f / 2f), new Vector2(0.5f, 0.5f)),
+        NotesSettings.Anchors.CenterRight => (new Vector2(1920f - Margin, 1080f / 2f), new Vector2(1f, 0.5f)),
         NotesSettings.Anchors.BottomLeft => (new Vector2(Margin, 1080f - Margin), new Vector2(0f, 1f)),
         NotesSettings.Anchors.BottomCenter => (new Vector2(1920f / 2f, 1080f - Margin), new Vector2(0.5f, 1f)),
         NotesSettings.Anchors.BottomRight => (new Vector2(1920f - Margin, 1080f - Margin), new Vector2(1f, 1f)),
